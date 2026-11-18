@@ -1,0 +1,9 @@
+My interest in evaluation began with a failure. In my second year I built a Chinese review classifier with two classmates, and our first model reached 68% accuracy. When I looked at the errors, most came from reviews shorter than a sentence, which the tokenizer had effectively discarded. I added a length-aware fallback and accuracy rose to 81%. That experience convinced me that measurement, not model size, decides whether a system is useful.
+
+I have since worked on a research project in the university NLP lab. I helped with data annotation and learned a lot about how labels are produced.
+
+I am applying to your MSc because the department has an excellent reputation and world-class faculty. I am particularly interested in evaluation and would like to study how metrics behave when the input distribution shifts, since a benchmark score that is stable in the lab can hide a large drop on user-written text. I also spent one summer teaching in a rural school, where I designed worksheets for 40 students and saw how quickly they gave up when a problem was phrased abstractly.
+
+My long-term goal is to build evaluation tools that let non-experts judge whether a model's answer can be trusted. This programme would give me the methodological training to do that work rigorously, and I hope to contribute to the lab's ongoing work on robust evaluation.
+
+Although I have not yet published, I believe that my combination of hands-on engineering experience, annotation experience, and teaching experience has prepared me well for the demands of graduate study, and I am confident that I can contribute to the programme from the first semester while also growing as a researcher under the guidance of faculty whose work I have followed closely for the past two years and whose papers on evaluation and robustness have shaped the way I think about the field and about the kind of research I want to pursue after graduation.

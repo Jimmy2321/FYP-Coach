@@ -5,3 +5,26 @@ dist
 .env*.local
 *.log
 .DS_Store
+
+# IDE / agent caches
+.trae/
+.trae-html-share-packages/
+.vscode/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Python caches and one-off analysis scripts
+__pycache__/
+*.pyc
+classify_*.py
+extract_*.py
+read_*.py
+md2pdf.py
+*_out.txt
+*_out.json
+
+# Rubric derivation / poster drafts (not part of shipped code)
+poster-draft/
+rubric_extracts/
+AI_Coach_*.png
+docs/superpowers/specs/2026-10-13-interview-rehearsal-system-design.pdf

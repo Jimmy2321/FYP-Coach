@@ -1,0 +1,25 @@
+LI MING
+liming@example.com | github.com/liming | Beijing, China
+
+SUMMARY
+Final-year computer science student focused on natural language processing and evaluation.
+
+EXPERIENCE
+
+Data Science Intern, ByteDance, Summer 2024
+- Built a review classification pipeline with BERT, raising accuracy from 68% to 81% on 12,000 labeled reviews.
+- Cut nightly batch runtime from 4 hours to 90 minutes by replacing a pandas loop with vectorized preprocessing.
+- Found that the first model failed on reviews shorter than 15 characters, then added a length-aware fallback that recovered 6 points of recall on that slice.
+
+Research Assistant, University NLP Lab, 2023-2024
+- Designed a Chinese entailment dataset of 3,400 pairs and wrote the annotation guideline used by four annotators.
+- Measured 0.72 inter-annotator agreement on the first pass, traced the disagreement to negated pairs, and rewrote the guideline to reach 0.86.
+
+PROJECTS
+
+Campus Question Answering System, 2023
+- Built a retrieval pipeline over 8,000 course documents.
+- The first version failed on multi-hop questions, so I added a reranker that raised answer accuracy by 12 points.
+
+SKILLS
+Python, PyTorch, Transformers, SQL

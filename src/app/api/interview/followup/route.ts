@@ -150,6 +150,63 @@ function terminate(
   });
 }
 
+const REASON_MARKER =
+  /\b(because|since|so that|in order to|due to|as a result|which means|the reason)\b/i;
+const MECHANISM_MARKER =
+  /\b(tokeni[sz]\w*|encod\w*|embed\w*|vector\w*|layer\w*|head|pool\w*|map\w*|feed\w*|train\w*|infer\w*|predict\w*|retriev\w*|rerank\w*|scor\w*|classif\w*|quer\w*|extract\w*|split\w*|filter\w*|convert\w*|comput\w*)\b/i;
+const UNFOLD_MARKER = /\b(first|then|next|after|before|through|via|step)\b/i;
+const COST_MARKER =
+  /\b(cost|trade-?off|downside|instead|whereas|but|however|slower|faster|cheaper|latency|accuracy|precision|recall|memory|complexity)\b/i;
+const FAILURE_MARKER =
+  /\b(fail\w*|break\w*|broke\w*|when|if|edge case|rare|outlier|degrad\w*|limitation|cannot|does not|doesn't)\b/i;
+const SCOPE_MARKER = /\b(i|my|we|our|responsible|owned|led|team|only|within|limited)\b/i;
+
+const STOP_WORDS = new Set([
+  "the", "and", "for", "that", "this", "with", "you", "your", "are", "was", "were",
+  "have", "has", "had", "from", "what", "how", "why", "did", "does", "about", "into",
+  "when", "which", "they", "them", "its", "can", "could", "would", "should", "there",
+  "then", "was", "were", "will", "but", "not", "all", "any",
+]);
+
+function contentTokens(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
+  );
+}
+
+// 追问复用了原题的多数关键词，等于换个说法重问
+function repeatsQuestion(followup: string, original: string): boolean {
+  const a = contentTokens(original);
+  const b = contentTokens(followup);
+  if (a.size === 0 || b.size === 0) return false;
+  let shared = 0;
+  for (const w of a) if (b.has(w)) shared += 1;
+  return shared / a.size >= 0.6;
+}
+
+function answerReachesDepth(
+  answer: string,
+  probeType: ProbeType | null,
+  expectedDepth: number | null
+): boolean {
+  const words = answer.trim().split(/\s+/).filter(Boolean).length;
+
+  if (expectedDepth === 1) return words >= 8;
+  if (expectedDepth === 2) {
+    return words >= 20 && (REASON_MARKER.test(answer) || SCOPE_MARKER.test(answer));
+  }
+  if (expectedDepth === 3) {
+    if (probeType === "tradeoff") return words >= 25 && COST_MARKER.test(answer);
+    if (probeType === "failure_mode") return words >= 22 && FAILURE_MARKER.test(answer);
+    return words >= 30 && REASON_MARKER.test(answer) && (MECHANISM_MARKER.test(answer) || UNFOLD_MARKER.test(answer));
+  }
+  // 固定题库题没有 expected_depth：只有明显完整的长回答才直接收尾
+  return words >= 50 && REASON_MARKER.test(answer);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -206,13 +263,28 @@ export async function POST(req: NextRequest) {
       return terminate(FORCED_MOVE_ON_ACK[persona], TERMINATION_TURN_CAP, predicate);
     }
 
+    // 答案已包含该题要求的信息量时直接收尾，避免每道题都被追问
+    if (answerReachesDepth(answer, probedDirection, expectedDepth)) {
+      return terminate(FORCED_MOVE_ON_ACK[persona], TERMINATION_COVERED, predicate);
+    }
+
     const rubric = readRubricSection("followup_engine_v3");
-    const system = `${rubric}\n\nFollow the rubric exactly and output valid JSON only.`;
+    const system = [
+      rubric,
+      "",
+      "Follow the rubric exactly and output valid JSON only.",
+      "",
+      "How to apply the rubric in this session:",
+      "- Closing the chain is the default. Continue only when one of the four trigger forms applies and you can name the specific missing element.",
+      "- Trigger form 2 applies only when the question itself asked for more than one direction. Each question targets a single probe_type, so an answer that covers that direction does not justify a probe merely because another declared direction (for example scope or accuracy) exists. Those directions are covered by other questions.",
+      "- Do not probe merely because another declared direction exists, or because fewer than the maximum number of follow-ups have been asked.",
+      "- If the answer already meets the expected depth, set is_termination to true.",
+    ].join("\n");
 
     const user = [
       `Interviewer persona: ${persona}`,
       `Current phase: Phase ${phase} — ${PHASE_NAMES[track][phase - 1]}`,
-      `Follow-ups already asked on this topic: ${depth} (max ${MAX_DEPTH})`,
+      `Follow-ups already asked on this topic: ${depth} (max ${MAX_DEPTH}); this is context, not a target to reach.`,
       probedDirection
         ? `Direction already probed by that question: ${probedDirection}${
             expectedDepth ? ` (expected_depth ${expectedDepth})` : ""
@@ -264,7 +336,7 @@ export async function POST(req: NextRequest) {
     const earlier = [current_question, ...history.map((h) => h.question)].filter(
       (q): q is string => typeof q === "string" && q.length > 0
     );
-    if (earlier.some((q) => similarity(q, question) >= 0.8)) {
+    if (earlier.some((q) => similarity(q, question) >= 0.6 || repeatsQuestion(question, q))) {
       return terminate(FORCED_MOVE_ON_ACK[persona], TERMINATION_COVERED, predicate);
     }
 

@@ -587,7 +587,7 @@ export default function InterviewRunner({ track }: { track: RunnerTrack }) {
           <h1 className="font-display text-3xl text-navy-950 mb-1">{config.title}</h1>
           <p className="text-sm text-navy-500">
             {phases.length > 0
-              ? `${totalQ} questions · Question ${absoluteQ}/${totalQ} · Follow-up depth ${depth}/3`
+              ? `${totalQ} questions · Question ${absoluteQ}/${totalQ}`
               : "Preparing your interview…"}
           </p>
           {targetLabel && (
@@ -655,7 +655,7 @@ export default function InterviewRunner({ track }: { track: RunnerTrack }) {
               <div className={`max-w-[75%] ${t.role === "candidate" ? "text-right" : ""}`}>
                 {t.role === "interviewer" && t.depth > 0 && (
                   <div className="text-[10px] tracking-wider uppercase text-navy-400 mb-1">
-                    ↳ Follow-up · depth {t.depth}
+                    ↳ Follow-up
                   </div>
                 )}
                 <div className={`inline-block text-left rounded-2xl px-5 py-3 text-sm leading-relaxed ${
